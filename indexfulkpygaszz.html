@@ -1,0 +1,2312 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="theme-color" content="#020204">
+<title>BAGAS — Digital Universe</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
+
+html{
+  scroll-behavior:smooth;
+  background:#020204;
+}
+
+body{
+  background:#020204;
+  color:#f5f5f5;
+  font-family:Inter,Arial,sans-serif;
+  overflow-x:hidden;
+  cursor:none;
+}
+
+canvas{
+  position:fixed;
+  inset:0;
+  width:100%;
+  height:100%;
+  z-index:0;
+  pointer-events:none;
+}
+
+#space{
+  z-index:0;
+}
+
+#network{
+  z-index:1;
+  opacity:.45;
+}
+
+#particles{
+  z-index:2;
+}
+
+.noise{
+  position:fixed;
+  inset:0;
+  z-index:4;
+  pointer-events:none;
+  opacity:.045;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E");
+}
+
+.vignette{
+  position:fixed;
+  inset:0;
+  z-index:3;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at center,transparent 25%,rgba(0,0,0,.2) 65%,rgba(0,0,0,.7));
+}
+
+.cursor{
+  position:fixed;
+  left:0;
+  top:0;
+  width:20px;
+  height:20px;
+  border:1px solid rgba(255,255,255,.85);
+  border-radius:50%;
+  transform:translate(-50%,-50%);
+  pointer-events:none;
+  z-index:9999;
+  transition:
+    width .25s ease,
+    height .25s ease,
+    background .25s ease;
+  mix-blend-mode:difference;
+}
+
+.cursor-dot{
+  position:fixed;
+  left:0;
+  top:0;
+  width:4px;
+  height:4px;
+  background:white;
+  border-radius:50%;
+  transform:translate(-50%,-50%);
+  z-index:10000;
+  pointer-events:none;
+}
+
+/* NAV */
+
+nav{
+  position:fixed;
+  left:0;
+  top:0;
+  width:100%;
+  height:80px;
+  padding:0 6vw;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  z-index:100;
+  background:linear-gradient(
+    to bottom,
+    rgba(2,2,4,.8),
+    transparent
+  );
+  backdrop-filter:blur(8px);
+}
+
+.logo{
+  font-family:"Space Grotesk";
+  font-weight:700;
+  font-size:18px;
+  letter-spacing:5px;
+}
+
+.nav-right{
+  display:flex;
+  gap:25px;
+  align-items:center;
+  font-size:9px;
+  letter-spacing:3px;
+  color:#777;
+}
+
+.live{
+  display:flex;
+  align-items:center;
+  gap:7px;
+}
+
+.live i{
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  background:#fff;
+  box-shadow:0 0 15px #fff;
+  animation:pulse 1.4s infinite;
+}
+
+@keyframes pulse{
+  50%{opacity:.2;transform:scale(.5)}
+}
+
+/* PROGRESS */
+
+.progress{
+  position:fixed;
+  right:25px;
+  top:50%;
+  transform:translateY(-50%);
+  height:130px;
+  width:1px;
+  background:#222;
+  z-index:100;
+}
+
+.progress-fill{
+  width:100%;
+  height:0%;
+  background:#fff;
+  box-shadow:0 0 12px #fff;
+}
+
+/* SECTIONS */
+
+section{
+  position:relative;
+  z-index:10;
+  min-height:100vh;
+  padding:140px 8vw;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+
+.hero{
+  min-height:120vh;
+  overflow:hidden;
+}
+
+.hero-content{
+  position:relative;
+  z-index:20;
+}
+
+.mini{
+  font-size:10px;
+  letter-spacing:5px;
+  color:#777;
+  text-transform:uppercase;
+  margin-bottom:30px;
+}
+
+.hero h1{
+  font-family:"Space Grotesk";
+  font-size:clamp(90px,18vw,270px);
+  line-height:.72;
+  letter-spacing:-12px;
+  font-weight:700;
+}
+
+.hero h1 span{
+  display:block;
+}
+
+.white-gradient{
+  background:
+    linear-gradient(
+      100deg,
+      #fff 0%,
+      #aaa 40%,
+      #444 100%
+    );
+  -webkit-background-clip:text;
+  color:transparent;
+}
+
+.hero-description{
+  max-width:720px;
+  margin-top:65px;
+  color:#999;
+  font-size:clamp(17px,2vw,25px);
+  line-height:1.6;
+}
+
+.hero-description strong{
+  color:#ddd;
+}
+
+.scroll-hint{
+  position:absolute;
+  bottom:45px;
+  left:8vw;
+  color:#555;
+  letter-spacing:4px;
+  font-size:9px;
+  animation:breathe 2s infinite;
+}
+
+@keyframes breathe{
+  50%{opacity:.25;transform:translateY(7px)}
+}
+
+/* REVEAL */
+
+.reveal{
+  opacity:0;
+  transform:translateY(90px) scale(.97);
+  filter:blur(10px);
+  transition:
+    opacity 1.2s cubic-bezier(.16,1,.3,1),
+    transform 1.2s cubic-bezier(.16,1,.3,1),
+    filter 1.2s cubic-bezier(.16,1,.3,1);
+}
+
+.reveal.active{
+  opacity:1;
+  transform:none;
+  filter:blur(0);
+}
+
+/* HEADINGS */
+
+.section-number{
+  font-size:10px;
+  letter-spacing:5px;
+  color:#555;
+  margin-bottom:30px;
+}
+
+.big{
+  max-width:1250px;
+  font-family:"Space Grotesk";
+  font-size:clamp(55px,10vw,145px);
+  line-height:.87;
+  letter-spacing:-7px;
+  font-weight:600;
+}
+
+.copy{
+  max-width:750px;
+  margin-top:45px;
+  color:#888;
+  line-height:1.9;
+  font-size:17px;
+}
+
+/* CARDS */
+
+.cards{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:16px;
+  margin-top:75px;
+}
+
+.card{
+  position:relative;
+  min-height:300px;
+  padding:30px;
+  border:1px solid rgba(255,255,255,.1);
+  background:rgba(255,255,255,.025);
+  overflow:hidden;
+  transition:
+    transform .5s,
+    border-color .5s,
+    background .5s;
+}
+
+.card:before{
+  content:"";
+  position:absolute;
+  width:250px;
+  height:250px;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  background:radial-gradient(
+    circle,
+    rgba(255,255,255,.09),
+    transparent 65%
+  );
+  opacity:0;
+  transition:.5s;
+}
+
+.card:hover{
+  transform:translateY(-12px);
+  border-color:#555;
+  background:rgba(255,255,255,.055);
+}
+
+.card:hover:before{
+  opacity:1;
+}
+
+.card-number{
+  color:#555;
+  font-size:10px;
+  letter-spacing:3px;
+}
+
+.card h3{
+  position:relative;
+  margin-top:100px;
+  font-family:"Space Grotesk";
+  font-size:30px;
+}
+
+.card p{
+  position:relative;
+  margin-top:15px;
+  color:#777;
+  line-height:1.7;
+}
+
+/* PARTICLE TITLE */
+
+.particle-title{
+  position:relative;
+  height:260px;
+  margin-top:50px;
+}
+
+#textParticles{
+  position:absolute;
+  width:100%;
+  height:100%;
+}
+
+/* CODE */
+
+.terminal{
+  margin-top:65px;
+  width:min(1000px,100%);
+  border:1px solid #24242a;
+  background:rgba(5,5,8,.88);
+  box-shadow:
+    0 40px 120px rgba(0,0,0,.7),
+    inset 0 0 80px rgba(255,255,255,.015);
+  overflow:hidden;
+}
+
+.terminal-head{
+  height:46px;
+  border-bottom:1px solid #222;
+  display:flex;
+  align-items:center;
+  padding:0 17px;
+  gap:7px;
+}
+
+.tdot{
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:#444;
+}
+
+.terminal-title{
+  margin-left:12px;
+  color:#444;
+  font-size:9px;
+  letter-spacing:2px;
+}
+
+pre{
+  padding:35px;
+  color:#aaa;
+  font-family:monospace;
+  line-height:1.9;
+  font-size:14px;
+  overflow:auto;
+}
+
+.purple{color:#c084fc}
+.cyan{color:#67e8f9}
+.gray{color:#555}
+.light{color:#ddd}
+
+/* TIMELINE */
+
+.timeline{
+  position:relative;
+  margin-top:85px;
+  max-width:1000px;
+}
+
+.timeline-line{
+  position:absolute;
+  left:16px;
+  top:0;
+  bottom:0;
+  width:1px;
+  background:linear-gradient(
+    to bottom,
+    transparent,
+    #444 10%,
+    #444 90%,
+    transparent
+  );
+}
+
+.event{
+  position:relative;
+  padding-left:65px;
+  margin-bottom:90px;
+}
+
+.event-dot{
+  position:absolute;
+  left:9px;
+  top:5px;
+  width:15px;
+  height:15px;
+  border:1px solid #fff;
+  border-radius:50%;
+  background:#020204;
+  box-shadow:0 0 0 7px rgba(255,255,255,.025);
+}
+
+.event:hover .event-dot{
+  box-shadow:
+    0 0 0 8px rgba(255,255,255,.04),
+    0 0 25px rgba(255,255,255,.5);
+}
+
+.event-year{
+  color:#555;
+  font-family:monospace;
+  font-size:12px;
+  letter-spacing:3px;
+}
+
+.event h3{
+  font-family:"Space Grotesk";
+  font-size:38px;
+  margin-top:10px;
+}
+
+.event p{
+  max-width:700px;
+  color:#777;
+  line-height:1.8;
+  margin-top:12px;
+}
+
+/* CYBER */
+
+.cyber-panel{
+  margin-top:70px;
+  border:1px solid #24242a;
+  padding:40px;
+  background:
+    radial-gradient(
+      circle at 80% 20%,
+      rgba(255,255,255,.06),
+      transparent 35%
+    ),
+    rgba(255,255,255,.02);
+}
+
+.cyber-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:23px 0;
+  border-bottom:1px solid #1d1d20;
+}
+
+.cyber-row:last-child{
+  border-bottom:0;
+}
+
+.cyber-name{
+  color:#aaa;
+}
+
+.cyber-status{
+  font-family:monospace;
+  font-size:11px;
+  color:#666;
+}
+
+.status-dot{
+  display:inline-block;
+  width:5px;
+  height:5px;
+  border-radius:50%;
+  background:#aaa;
+  margin-right:8px;
+  box-shadow:0 0 10px #aaa;
+}
+
+/* NETWORK */
+
+.network-box{
+  height:500px;
+  position:relative;
+  margin-top:65px;
+  border:1px solid #18181b;
+  overflow:hidden;
+  background:rgba(0,0,0,.2);
+}
+
+.network-label{
+  position:absolute;
+  left:25px;
+  top:20px;
+  font-family:monospace;
+  color:#444;
+  font-size:10px;
+  letter-spacing:2px;
+}
+
+/* FUTURE */
+
+.quote{
+  margin-top:60px;
+  padding-left:30px;
+  border-left:1px solid #444;
+  color:#888;
+  font-size:20px;
+  line-height:1.7;
+  max-width:800px;
+}
+
+/* FINAL */
+
+.final{
+  text-align:center;
+  align-items:center;
+  min-height:110vh;
+}
+
+.final .big{
+  text-align:center;
+}
+
+.final-copy{
+  max-width:650px;
+  color:#777;
+  margin-top:45px;
+  line-height:1.8;
+}
+
+.socials{
+  display:flex;
+  gap:15px;
+  margin-top:55px;
+  flex-wrap:wrap;
+  justify-content:center;
+}
+
+.socials a{
+  text-decoration:none;
+  color:#eee;
+  border:1px solid #333;
+  padding:15px 25px;
+  font-size:11px;
+  letter-spacing:2px;
+  transition:.3s;
+}
+
+.socials a:hover{
+  color:#000;
+  background:#fff;
+  border-color:#fff;
+}
+
+footer{
+  position:relative;
+  z-index:20;
+  padding:45px 8vw;
+  border-top:1px solid #161619;
+  display:flex;
+  justify-content:space-between;
+  color:#444;
+  font-size:9px;
+  letter-spacing:3px;
+}
+
+/* GLITCH */
+
+.glitch{
+  position:relative;
+}
+
+.glitch:before,
+.glitch:after{
+  content:attr(data-text);
+  position:absolute;
+  inset:0;
+  opacity:0;
+}
+
+.glitch:hover:before{
+  opacity:.5;
+  transform:translate(3px,-2px);
+  clip-path:inset(20% 0 60% 0);
+}
+
+.glitch:hover:after{
+  opacity:.5;
+  transform:translate(-3px,2px);
+  clip-path:inset(65% 0 10% 0);
+}
+
+/* MOBILE */
+
+@media(max-width:800px){
+
+  body{
+    cursor:auto;
+  }
+
+  .cursor,
+  .cursor-dot{
+    display:none;
+  }
+
+  nav{
+    height:65px;
+    padding:0 5vw;
+  }
+
+  .nav-status{
+    display:none;
+  }
+
+  section{
+    padding:110px 6vw;
+  }
+
+  .hero{
+    min-height:105vh;
+  }
+
+  .hero h1{
+    font-size:25vw;
+    letter-spacing:-6px;
+  }
+
+  .hero-description{
+    margin-top:45px;
+    font-size:17px;
+  }
+
+  .big{
+    font-size:16vw;
+    letter-spacing:-4px;
+  }
+
+  .cards{
+    grid-template-columns:1fr;
+    margin-top:50px;
+  }
+
+  .card{
+    min-height:230px;
+  }
+
+  .card h3{
+    margin-top:65px;
+  }
+
+  .particle-title{
+    height:150px;
+  }
+
+  .terminal{
+    margin-top:45px;
+  }
+
+  pre{
+    padding:22px;
+    font-size:11px;
+  }
+
+  .event{
+    padding-left:48px;
+  }
+
+  .event h3{
+    font-size:28px;
+  }
+
+  .cyber-panel{
+    padding:25px;
+  }
+
+  .network-box{
+    height:350px;
+  }
+
+  .progress{
+    right:10px;
+    height:80px;
+  }
+
+  footer{
+    flex-direction:column;
+    gap:15px;
+  }
+}
+
+/* REDUCE MOTION */
+
+@media(prefers-reduced-motion:reduce){
+  *,
+  *:before,
+  *:after{
+    animation-duration:.01ms!important;
+    transition-duration:.01ms!important;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<!-- CINEMATIC CANVASES -->
+<canvas id="space"></canvas>
+<canvas id="network"></canvas>
+<canvas id="particles"></canvas>
+
+<div class="noise"></div>
+<div class="vignette"></div>
+
+<div class="cursor"></div>
+<div class="cursor-dot"></div>
+
+<nav>
+  <div class="logo">BAGAS</div>
+
+  <div class="nav-right">
+    <div class="live">
+      <i></i>
+      DIGITAL UNIVERSE
+    </div>
+    <span>2026</span>
+  </div>
+</nav>
+
+<div class="progress">
+  <div class="progress-fill"></div>
+</div>
+
+
+<!-- ================================================= -->
+<!-- HERO -->
+<!-- ================================================= -->
+
+<section class="hero">
+
+  <div class="hero-content">
+
+    <div class="mini reveal">
+      Personal Digital Experience / Sanggau
+    </div>
+
+    <h1 class="reveal">
+      <span>BAGAS</span>
+      <span class="white-gradient">DEV.</span>
+    </h1>
+
+    <p class="hero-description reveal">
+      Saya <strong>Bagas</strong>, seorang pembelajar yang
+      tertarik pada <strong>coding, informatika, programming,
+      teknologi</strong> dan <strong>cyber security</strong>.
+      Dari rasa penasaran menjadi kode. Dari kode menjadi sesuatu
+      yang nyata.
+    </p>
+
+  </div>
+
+  <div class="scroll-hint">
+    SCROLL TO ENTER THE UNIVERSE ↓
+  </div>
+
+</section>
+
+
+<!-- ================================================= -->
+<!-- IDENTITY -->
+<!-- ================================================= -->
+
+<section>
+
+  <div class="section-number reveal">
+    01 / IDENTITY
+  </div>
+
+  <h2 class="big reveal">
+    Membangun masa depan
+    <span class="white-gradient">dengan kode.</span>
+  </h2>
+
+  <p class="copy reveal">
+    Bagi saya, coding bukan hanya tentang mengetik perintah
+    ke komputer. Coding adalah cara berpikir. Sebuah masalah
+    dipecah menjadi logika, algoritma, kemudian diterjemahkan
+    menjadi sistem yang dapat bekerja.
+  </p>
+
+  <div class="cards">
+
+    <div class="card reveal">
+      <span class="card-number">01</span>
+      <h3>BAGAS</h3>
+      <p>
+        Nama yang berada di balik perjalanan eksplorasi
+        teknologi ini.
+      </p>
+    </div>
+
+    <div class="card reveal">
+      <span class="card-number">02</span>
+      <h3>SANGGAU</h3>
+      <p>
+        Sanggau, Indonesia — tempat perjalanan belajar
+        ini dimulai.
+      </p>
+    </div>
+
+    <div class="card reveal">
+      <span class="card-number">03</span>
+      <h3>CODING</h3>
+      <p>
+        Hobi, eksperimen, dan salah satu cara untuk
+        terus memahami teknologi.
+      </p>
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- ================================================= -->
+<!-- PARTICLE BAGAS -->
+<!-- ================================================= -->
+
+<section>
+
+  <div class="section-number reveal">
+    02 / DIGITAL IDENTITY
+  </div>
+
+  <h2 class="big reveal">
+    Sebuah nama.
+    <span class="white-gradient">Ribuan kemungkinan.</span>
+  </h2>
+
+  <p class="copy reveal">
+    Ketika manusia memberikan instruksi kepada mesin,
+    sebuah ide dapat berubah menjadi pengalaman digital.
+  </p>
+
+  <div class="particle-title reveal">
+    <canvas id="textParticles"></canvas>
+  </div>
+
+</section>
+
+
+<!-- ================================================= -->
+<!-- SOCIAL -->
+<!-- ================================================= -->
+
+<section>
+
+  <div class="section-number reveal">
+    03 / CONNECT
+  </div>
+
+  <h2 class="big reveal">
+    Find me
+    <span class="white-gradient">online.</span>
+  </h2>
+
+  <p class="copy reveal">
+    Berbagi perjalanan, eksperimen, karya dan berbagai
+    hal yang berhubungan dengan dunia teknologi.
+  </p>
+
+  <div class="socials reveal">
+
+    <a href="https://instagram.com/gaszz_welll"
+       target="_blank"
+       rel="noopener">
+      INSTAGRAM · @GASZZ_WELLL
+    </a>
+
+    <a href="https://tiktok.com/@gaszz_welll"
+       target="_blank"
+       rel="noopener">
+      TIKTOK · @GASZZ_WELLL
+    </a>
+
+  </div>
+
+</section>
+
+
+<!-- ================================================= -->
+<!-- INFORMATICS -->
+<!-- ================================================= -->
+
+<section>
+
+  <div class="section-number reveal">
+    04 / INFORMATICS ENGINEERING
+  </div>
+
+  <h2 class="big reveal">
+    INFORMATIKA
+    <span class="white-gradient">ENGINEERING.</span>
+  </h2>
+
+  <p class="copy reveal">
+    Informatika menggabungkan logika, algoritma, komputer,
+    matematika, software dan kreativitas. Di balik aplikasi
+    yang kita gunakan setiap hari terdapat struktur,
+    data, algoritma dan sistem yang bekerja bersama.
+  </p>
+
+  <div class="cards">
+
+    <div class="card reveal">
+      <span class="card-number">01</span>
+      <h3>ALGORITHM</h3>
+      <p>
+        Memahami cara menyelesaikan masalah melalui
+        langkah-langkah yang sistematis.
+      </p>
+    </div>
+
+    <div class="card reveal">
+      <span class="card-number">02</span>
+      <h3>SOFTWARE</h3>
+      <p>
+        Merancang dan membangun aplikasi yang dapat
+        digunakan manusia.
+      </p>
+    </div>
+
+    <div class="card reveal">
+      <span class="card-number">03</span>
+      <h3>SYSTEM</h3>
+      <p>
+        Memahami hubungan antara hardware, operating system,
+        network dan software.
+      </p>
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- ================================================= -->
+<!-- PROGRAMMING -->
+<!-- ================================================= -->
+
+<section>
+
+  <div class="section-number reveal">
+    05 / PROGRAMMING
+  </div>
+
+  <h2 class="big reveal">
+    THINK.
+    <span class="white-gradient">CODE.</span>
+    CREATE.
+  </h2>
+
+  <p class="copy reveal">
+    Sebuah program dimulai dari ide. Ide berubah menjadi
+    algoritma. Algoritma diterjemahkan menjadi kode.
+    Kemudian kode dikompilasi atau dijalankan untuk
+    menciptakan sesuatu yang dapat digunakan.
+  </p>
+
+  <div class="terminal reveal">
+
+    <div class="terminal-head">
+      <span class="tdot"></span>
+      <span class="tdot"></span>
+      <span class="tdot"></span>
+      <span class="terminal-title">
+        bagas@digital-universe ~
+      </span>
+    </div>
+
+<pre>
+<span class="gray">// BAGAS DIGITAL PROFILE</span>
+
+<span class="purple">const</span> bagas = {
+
+  name: <span class="light">"Bagas"</span>,
+
+  location: <span class="light">"Sanggau, Indonesia"</span>,
+
+  hobby: <span class="light">"Coding"</span>,
+
+  interests: [
+    <span class="light">"Informatics Engineering"</span>,
+    <span class="light">"Programming"</span>,
+    <span class="light">"Technology"</span>,
+    <span class="light">"Cyber Security"</span>,
+    <span class="light">"Artificial Intelligence"</span>
+  ]
+
+};
+
+<span class="cyan">learn</span>(bagas);
+<span class="cyan">build</span>(ideas);
+<span class="cyan">debug</span>(mistakes);
+<span class="cyan">keepGoing</span>();</pre>
+
+  </div>
+
+</section>
+
+
+<!-- ================================================= -->
+<!-- HISTORY -->
+<!-- ================================================= -->
+
+<section>
+
+  <div class="section-number reveal">
+    06 / HISTORY OF CODING
+  </div>
+
+  <h2 class="big reveal">
+    Sebelum dunia
+    <span class="white-gradient">dipenuhi software.</span>
+  </h2>
+
+  <p class="copy reveal">
+    Tidak ada satu orang yang dapat disebut sebagai penemu
+    tunggal coding. Pemrograman berkembang melalui perjalanan
+    panjang dari mesin mekanis, algoritma, teori komputasi,
+    bahasa mesin hingga bahasa pemrograman modern.
+  </p>
+
+  <div class="timeline">
+
+    <div class="timeline-line"></div>
+
+    <div class="event reveal">
+      <div class="event-dot"></div>
+
+      <div class="event-year">
+        1800s
+      </div>
+
+      <h3>Charles Babbage</h3>
+
+      <p>
+        Merancang Difference Engine dan Analytical Engine.
+        Analytical Engine memiliki konsep penting seperti
+        memory, operasi dan mekanisme yang dapat dikendalikan
+        menggunakan instruksi.
+      </p>
+    </div>
+
+
+    <div class="event reveal">
+      <div class="event-dot"></div>
+
+      <div class="event-year">
+        1843
+      </div>
+
+      <h3>Ada Lovelace</h3>
+
+      <p>
+        Menulis catatan mengenai Analytical Engine yang
+        mencakup algoritma untuk diproses oleh mesin tersebut.
+        Ia sering dikenal sebagai programmer komputer pertama.
+      </p>
+    </div>
+
+
+    <div class="event reveal">
+      <div class="event-dot"></div>
+
+      <div class="event-year">
+        1930s — 1950s
+      </div>
+
+      <h3>Alan Turing</h3>
+
+      <p>
+        Mengembangkan konsep mesin Turing dan memberikan
+        kontribusi fundamental terhadap teori komputasi
+        dan perkembangan komputer modern.
+      </p>
+    </div>
+
+
+    <div class="event reveal">
+      <div class="event-dot"></div>
+
+      <div class="event-year">
+        1950s
+      </div>
+
+      <h3>Grace Hopper</h3>
+
+      <p>
+        Berperan penting dalam perkembangan compiler dan
+        pemrograman tingkat tinggi, membantu menjembatani
+        bahasa manusia dengan instruksi komputer.
+      </p>
+    </div>
+
+
+    <div class="event reveal">
+      <div class="event-dot"></div>
+
+      <div class="event-year">
+        1972
+      </div>
+
+      <h3>Dennis Ritchie</h3>
+
+      <p>
+        Mengembangkan bahasa C dan menjadi salah satu tokoh
+        penting dalam pengembangan Unix. C kemudian sangat
+        berpengaruh terhadap banyak bahasa pemrograman lain.
+      </p>
+    </div>
+
+
+    <div class="event reveal">
+      <div class="event-dot"></div>
+
+      <div class="event-year">
+        1990s
+      </div>
+
+      <h3>World Wide Web</h3>
+
+      <p>
+        Perkembangan web memperluas penggunaan HTML, CSS,
+        JavaScript dan teknologi internet sehingga programming
+        menjadi semakin dekat dengan kehidupan sehari-hari.
+      </p>
+    </div>
+
+
+    <div class="event reveal">
+      <div class="event-dot"></div>
+
+      <div class="event-year">
+        TODAY
+      </div>
+
+      <h3>AI & Modern Computing</h3>
+
+      <p>
+        Pemrograman berkembang menuju artificial intelligence,
+        cloud computing, mobile applications, distributed
+        systems dan cybersecurity.
+      </p>
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- ================================================= -->
+<!-- TECHNOLOGY -->
+<!-- ================================================= -->
+
+<section>
+
+  <div class="section-number reveal">
+    07 / TECHNOLOGY
+  </div>
+
+  <h2 class="big reveal">
+    Teknologi tidak
+    <span class="white-gradient">pernah diam.</span>
+  </h2>
+
+  <div class="cards">
+
+    <div class="card reveal">
+      <span class="card-number">01</span>
+      <h3>WEB</h3>
+      <p>
+        HTML, CSS, JavaScript dan teknologi web modern
+        untuk membangun pengalaman digital.
+      </p>
+    </div>
+
+    <div class="card reveal">
+      <span class="card-number">02</span>
+      <h3>AI</h3>
+      <p>
+        Artificial Intelligence membuka cara baru
+        manusia berinteraksi dengan komputer.
+      </p>
+    </div>
+
+    <div class="card reveal">
+      <span class="card-number">03</span>
+      <h3>COMPUTING</h3>
+      <p>
+        Dari perangkat kecil hingga sistem komputasi
+        berperforma tinggi.
+      </p>
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- ================================================= -->
+<!-- CYBER SECURITY -->
+<!-- ================================================= -->
+
+<section>
+
+  <div class="section-number reveal">
+    08 / CYBER SECURITY
+  </div>
+
+  <h2 class="big reveal">
+    DEFEND THE
+    <span class="white-gradient">DIGITAL WORLD.</span>
+  </h2>
+
+  <p class="copy reveal">
+    Cybersecurity berfokus pada menjaga kerahasiaan,
+    integritas dan ketersediaan sistem serta data.
+    Eksplorasi keamanan dilakukan secara legal,
+    etis dan bertanggung jawab.
+  </p>
+
+  <div class="cyber-panel reveal">
+
+    <div class="cyber-row">
+      <span class="cyber-name">Network Security</span>
+      <span class="cyber-status">
+        <i class="status-dot"></i>ACTIVE
+      </span>
+    </div>
+
+    <div class="cyber-row">
+      <span class="cyber-name">Web Security</span>
+      <span class="cyber-status">
+        <i class="status-dot"></i>ACTIVE
+      </span>
+    </div>
+
+    <div class="cyber-row">
+      <span class="cyber-name">Cryptography</span>
+      <span class="cyber-status">
+        <i class="status-dot"></i>SECURE
+      </span>
+    </div>
+
+    <div class="cyber-row">
+      <span class="cyber-name">Digital Forensics</span>
+      <span class="cyber-status">
+        <i class="status-dot"></i>READY
+      </span>
+    </div>
+
+    <div class="cyber-row">
+      <span class="cyber-name">Ethical Hacking</span>
+      <span class="cyber-status">
+        <i class="status-dot"></i>LAB ONLY
+      </span>
+    </div>
+
+    <div class="cyber-row">
+      <span class="cyber-name">Security Awareness</span>
+      <span class="cyber-status">
+        <i class="status-dot"></i>ONLINE
+      </span>
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- ================================================= -->
+<!-- NETWORK UNIVERSE -->
+<!-- ================================================= -->
+
+<section>
+
+  <div class="section-number reveal">
+    09 / DIGITAL NETWORK
+  </div>
+
+  <h2 class="big reveal">
+    Everything is
+    <span class="white-gradient">connected.</span>
+  </h2>
+
+  <p class="copy reveal">
+    Komputer, manusia, aplikasi, server dan jaringan
+    membentuk ekosistem digital yang sangat luas.
+  </p>
+
+  <div class="network-box reveal">
+
+    <div class="network-label">
+      LIVE NETWORK VISUALIZATION
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- ================================================= -->
+<!-- FUTURE -->
+<!-- ================================================= -->
+
+<section>
+
+  <div class="section-number reveal">
+    10 / FUTURE
+  </div>
+
+  <h2 class="big reveal">
+    Dari seorang
+    <span class="white-gradient">pembelajar.</span>
+  </h2>
+
+  <p class="copy reveal">
+    Setiap programmer pernah melihat layar kosong.
+    Perjalanan dimulai dari satu baris kode, satu kesalahan,
+    satu bug, lalu satu solusi.
+  </p>
+
+  <div class="quote reveal">
+    "Belajar teknologi bukan tentang mengetahui semuanya.
+    Ini tentang memiliki rasa ingin tahu untuk terus mencari
+    tahu apa yang belum kita mengerti."
+  </div>
+
+  <div class="cards">
+
+    <div class="card reveal">
+      <span class="card-number">01</span>
+      <h3>LEARN</h3>
+      <p>
+        Kuasai fundamental sebelum mengejar teknologi
+        yang lebih kompleks.
+      </p>
+    </div>
+
+    <div class="card reveal">
+      <span class="card-number">02</span>
+      <h3>BUILD</h3>
+      <p>
+        Jadikan ilmu sebagai proyek nyata yang
+        dapat dilihat dan digunakan.
+      </p>
+    </div>
+
+    <div class="card reveal">
+      <span class="card-number">03</span>
+      <h3>EVOLVE</h3>
+      <p>
+        Terus berkembang karena teknologi selalu
+        bergerak maju.
+      </p>
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- ================================================= -->
+<!-- FINAL -->
+<!-- ================================================= -->
+
+<section class="final">
+
+  <div class="section-number reveal">
+    11 / BAGAS
+  </div>
+
+  <h2 class="big reveal">
+    CODE THE
+    <span class="white-gradient">FUTURE.</span>
+  </h2>
+
+  <p class="final-copy reveal">
+    Bagas · Sanggau · Coding · Informatics · Technology ·
+    Programming · Cyber Security
+  </p>
+
+  <div class="socials reveal">
+
+    <a href="https://instagram.com/gaszz_welll"
+       target="_blank"
+       rel="noopener">
+      INSTAGRAM
+    </a>
+
+    <a href="https://tiktok.com/@gaszz_welll"
+       target="_blank"
+       rel="noopener">
+      TIKTOK
+    </a>
+
+  </div>
+
+</section>
+
+
+<footer>
+  <span>BAGAS / DIGITAL UNIVERSE</span>
+  <span>CODING BY @GASZZ_WELLL</span>
+</footer>
+
+
+<script>
+
+/* =====================================================
+   GLOBAL
+===================================================== */
+
+const DPR = Math.min(window.devicePixelRatio || 1,2);
+
+let W = innerWidth;
+let H = innerHeight;
+
+const mouse = {
+  x:W/2,
+  y:H/2,
+  tx:W/2,
+  ty:H/2
+};
+
+let scrollY = 0;
+
+window.addEventListener("resize",()=>{
+  W=innerWidth;
+  H=innerHeight;
+});
+
+
+/* =====================================================
+   CURSOR
+===================================================== */
+
+const cursor=document.querySelector(".cursor");
+const cursorDot=document.querySelector(".cursor-dot");
+
+if(innerWidth>800){
+
+  window.addEventListener("mousemove",e=>{
+    mouse.tx=e.clientX;
+    mouse.ty=e.clientY;
+  });
+
+  function cursorLoop(){
+
+    mouse.x += (mouse.tx-mouse.x)*.18;
+    mouse.y += (mouse.ty-mouse.y)*.18;
+
+    cursor.style.left=mouse.x+"px";
+    cursor.style.top=mouse.y+"px";
+
+    cursorDot.style.left=mouse.tx+"px";
+    cursorDot.style.top=mouse.ty+"px";
+
+    requestAnimationFrame(cursorLoop);
+  }
+
+  cursorLoop();
+
+  document.querySelectorAll("a,.card,.event").forEach(el=>{
+
+    el.addEventListener("mouseenter",()=>{
+      cursor.style.width="55px";
+      cursor.style.height="55px";
+      cursor.style.background="rgba(255,255,255,.08)";
+    });
+
+    el.addEventListener("mouseleave",()=>{
+      cursor.style.width="20px";
+      cursor.style.height="20px";
+      cursor.style.background="transparent";
+    });
+
+  });
+}
+
+
+/* =====================================================
+   SCROLL
+===================================================== */
+
+window.addEventListener("scroll",()=>{
+  scrollY=window.scrollY;
+
+  const max=
+    document.documentElement.scrollHeight-
+    innerHeight;
+
+  const p=(scrollY/max)*100;
+
+  document.querySelector(".progress-fill")
+    .style.height=p+"%";
+});
+
+
+/* =====================================================
+   REVEAL
+===================================================== */
+
+const observer=new IntersectionObserver(entries=>{
+
+  entries.forEach(entry=>{
+
+    if(entry.isIntersecting){
+
+      entry.target.classList.add("active");
+
+    }
+
+  });
+
+},{
+  threshold:.12
+});
+
+document.querySelectorAll(".reveal")
+  .forEach(el=>observer.observe(el));
+
+
+/* =====================================================
+   CANVAS HELPER
+===================================================== */
+
+function setupCanvas(canvas){
+
+  const ctx=canvas.getContext("2d");
+
+  function resize(){
+
+    canvas.width=innerWidth*DPR;
+    canvas.height=innerHeight*DPR;
+
+    canvas.style.width=innerWidth+"px";
+    canvas.style.height=innerHeight+"px";
+
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+  }
+
+  resize();
+
+  window.addEventListener("resize",resize);
+
+  return ctx;
+}
+
+
+/* =====================================================
+   SPACE STARFIELD
+===================================================== */
+
+const space=document.getElementById("space");
+const sctx=setupCanvas(space);
+
+const STAR_COUNT=
+  innerWidth>1200 ? 2600 :
+  innerWidth>700 ? 1500 : 600;
+
+const stars=[];
+
+for(let i=0;i<STAR_COUNT;i++){
+
+  stars.push({
+    x:(Math.random()-.5)*W*2.5,
+    y:(Math.random()-.5)*H*2.5,
+    z:Math.random()*W+1,
+    pz:Math.random()*W+1,
+    size:Math.random()*1.7+.15,
+    speed:Math.random()*1.7+.2,
+    twinkle:Math.random()*Math.PI*2
+  });
+
+}
+
+function drawSpace(){
+
+  sctx.clearRect(0,0,W,H);
+
+  const cx=W/2;
+  const cy=H/2;
+
+  for(const s of stars){
+
+    s.z-=s.speed;
+
+    if(s.z<1){
+
+      s.x=(Math.random()-.5)*W*2.5;
+      s.y=(Math.random()-.5)*H*2.5;
+      s.z=W;
+      s.pz=s.z;
+    }
+
+    const sx=(s.x/s.z)*W+cx;
+    const sy=(s.y/s.z)*W+cy;
+
+    const px=(s.x/s.pz)*W+cx;
+    const py=(s.y/s.pz)*W+cy;
+
+    const depth=1-s.z/W;
+
+    const alpha=.15+depth*.8;
+
+    sctx.beginPath();
+    sctx.moveTo(px,py);
+    sctx.lineTo(sx,sy);
+
+    sctx.strokeStyle=
+      `rgba(255,255,255,${alpha*.35})`;
+
+    sctx.lineWidth=
+      Math.max(.2,depth*1.8);
+
+    sctx.stroke();
+
+    sctx.beginPath();
+
+    sctx.arc(
+      sx,
+      sy,
+      s.size*(.4+depth*1.8),
+      0,
+      Math.PI*2
+    );
+
+    sctx.fillStyle=
+      `rgba(255,255,255,${alpha})`;
+
+    sctx.fill();
+
+    s.pz=s.z;
+  }
+
+  requestAnimationFrame(drawSpace);
+}
+
+drawSpace();
+
+
+/* =====================================================
+   MAIN PARTICLE UNIVERSE
+===================================================== */
+
+const pc=document.getElementById("particles");
+const pctx=setupCanvas(pc);
+
+const COUNT=
+  innerWidth>1500 ? 9500 :
+  innerWidth>1000 ? 7000 :
+  innerWidth>700 ? 4200 : 1800;
+
+const particles=[];
+
+for(let i=0;i<COUNT;i++){
+
+  const angle=Math.random()*Math.PI*2;
+  const radius=Math.random()*Math.max(W,H)*.8;
+
+  particles.push({
+
+    x:W/2+Math.cos(angle)*radius,
+    y:H/2+Math.sin(angle)*radius,
+
+    ox:W/2+Math.cos(angle)*radius,
+    oy:H/2+Math.sin(angle)*radius,
+
+    vx:(Math.random()-.5)*.35,
+    vy:(Math.random()-.5)*.35,
+
+    size:Math.random()*1.8+.2,
+    alpha:Math.random()*.7+.15,
+
+    phase:Math.random()*Math.PI*2,
+    orbit:Math.random()*Math.PI*2,
+
+    depth:Math.random(),
+
+    burst:0
+  });
+
+}
+
+
+/* particle burst trigger */
+
+let lastSection=-1;
+
+function getSection(){
+
+  return Math.floor(
+    (scrollY/(document.body.scrollHeight-innerHeight))*11
+  );
+
+}
+
+
+function particlePhysics(){
+
+  const section=getSection();
+
+  if(section!==lastSection){
+
+    for(const p of particles){
+
+      const a=Math.random()*Math.PI*2;
+      const force=Math.random()*14+2;
+
+      p.vx+=Math.cos(a)*force;
+      p.vy+=Math.sin(a)*force;
+
+      p.burst=1;
+    }
+
+    lastSection=section;
+  }
+
+  const centerX=W/2;
+  const centerY=H/2;
+
+  const mouseForce=
+    innerWidth>800 ? 0.7 : 0;
+
+  for(const p of particles){
+
+    /* decay */
+
+    p.vx*=.965;
+    p.vy*=.965;
+
+    /* base movement */
+
+    p.x+=p.vx;
+    p.y+=p.vy;
+
+    /* galaxy gravity */
+
+    const dx=centerX-p.x;
+    const dy=centerY-p.y;
+
+    const distance=Math.sqrt(dx*dx+dy*dy)+1;
+
+    const gravity=
+      Math.min(.018,distance/100000);
+
+    p.vx+=dx/distance*gravity;
+    p.vy+=dy/distance*gravity;
+
+    /* vortex */
+
+    const vortex=
+      Math.sin(distance*.002+scrollY*.001)*.008;
+
+    p.vx+=-dy/distance*vortex*10;
+    p.vy+= dx/distance*vortex*10;
+
+    /* mouse interaction */
+
+    if(mouseForce){
+
+      const mx=p.x-mouse.x;
+      const my=p.y-mouse.y;
+
+      const md=Math.sqrt(mx*mx+my*my)+1;
+
+      if(md<180){
+
+        const force=
+          (1-md/180)*mouseForce;
+
+        p.vx+=mx/md*force;
+        p.vy+=my/md*force;
+      }
+    }
+
+    /* bounds */
+
+    if(p.x<-100) p.x=W+100;
+    if(p.x>W+100) p.x=-100;
+
+    if(p.y<-100) p.y=H+100;
+    if(p.y>H+100) p.y=-100;
+
+    p.burst*=.97;
+  }
+
+}
+
+
+function drawParticles(){
+
+  pctx.clearRect(0,0,W,H);
+
+  particlePhysics();
+
+  /* connect only a subset for performance */
+
+  const connectionDistance=
+    innerWidth>1000 ? 85 : 55;
+
+  for(let i=0;i<particles.length;i+=3){
+
+    const a=particles[i];
+
+    pctx.beginPath();
+
+    pctx.arc(
+      a.x,
+      a.y,
+      a.size*(1+a.burst*2),
+      0,
+      Math.PI*2
+    );
+
+    pctx.fillStyle=
+      `rgba(255,255,255,${a.alpha})`;
+
+    pctx.fill();
+
+    /* occasional glow */
+
+    if(a.burst>.35){
+
+      pctx.beginPath();
+
+      pctx.arc(
+        a.x,
+        a.y,
+        a.size*5,
+        0,
+        Math.PI*2
+      );
+
+      pctx.fillStyle=
+        `rgba(255,255,255,${a.burst*.04})`;
+
+      pctx.fill();
+    }
+
+  }
+
+  /* particle connections */
+
+  if(innerWidth>700){
+
+    for(let i=0;i<particles.length;i+=18){
+
+      const a=particles[i];
+
+      for(let j=i+18;j<particles.length;j+=30){
+
+        const b=particles[j];
+
+        const dx=a.x-b.x;
+        const dy=a.y-b.y;
+
+        const d=dx*dx+dy*dy;
+
+        if(d<connectionDistance*connectionDistance){
+
+          const opacity=
+            (1-Math.sqrt(d)/connectionDistance)*.12;
+
+          pctx.beginPath();
+          pctx.moveTo(a.x,a.y);
+          pctx.lineTo(b.x,b.y);
+
+          pctx.strokeStyle=
+            `rgba(255,255,255,${opacity})`;
+
+          pctx.lineWidth=.4;
+          pctx.stroke();
+        }
+
+      }
+
+    }
+
+  }
+
+  requestAnimationFrame(drawParticles);
+}
+
+drawParticles();
+
+
+/* =====================================================
+   PARTICLE TEXT "BAGAS"
+===================================================== */
+
+const tc=document.getElementById("textParticles");
+const tctx=tc.getContext("2d");
+
+function resizeTextCanvas(){
+
+  const box=tc.parentElement.getBoundingClientRect();
+
+  tc.width=box.width*DPR;
+  tc.height=box.height*DPR;
+
+  tc.style.width=box.width+"px";
+  tc.style.height=box.height+"px";
+
+  tctx.setTransform(DPR,0,0,DPR,0,0);
+}
+
+resizeTextCanvas();
+window.addEventListener("resize",resizeTextCanvas);
+
+
+const textParticles=[];
+
+function createTextParticles(){
+
+  textParticles.length=0;
+
+  const box=tc.parentElement.getBoundingClientRect();
+
+  const temp=document.createElement("canvas");
+  temp.width=Math.floor(box.width);
+  temp.height=Math.floor(box.height);
+
+  const ctx=temp.getContext("2d");
+
+  ctx.fillStyle="white";
+  ctx.font=
+    `bold ${Math.min(box.width*.22,150)}px Space Grotesk, sans-serif`;
+
+  ctx.textAlign="center";
+  ctx.textBaseline="middle";
+
+  ctx.fillText(
+    "BAGAS",
+    box.width/2,
+    box.height/2
+  );
+
+  const data=ctx.getImageData(
+    0,0,temp.width,temp.height
+  ).data;
+
+  const step=3;
+
+  for(let y=0;y<temp.height;y+=step){
+
+    for(let x=0;x<temp.width;x+=step){
+
+      const index=(y*temp.width+x)*4;
+
+      if(data[index+3]>120){
+
+        textParticles.push({
+
+          x:Math.random()*box.width,
+          y:Math.random()*box.height,
+
+          tx:x,
+          ty:y,
+
+          vx:0,
+          vy:0,
+
+          size:Math.random()*1.4+.4,
+
+          phase:Math.random()*Math.PI*2
+        });
+
+      }
+
+    }
+
+  }
+
+}
+
+createTextParticles();
+
+
+function drawTextParticles(){
+
+  const box=tc.parentElement.getBoundingClientRect();
+
+  tctx.clearRect(
+    0,
+    0,
+    box.width,
+    box.height
+  );
+
+  const visible=
+    tc.getBoundingClientRect().top<innerHeight*.9 &&
+    tc.getBoundingClientRect().bottom>0;
+
+  for(const p of textParticles){
+
+    const dx=p.tx-p.x;
+    const dy=p.ty-p.y;
+
+    p.vx+=dx*.018;
+    p.vy+=dy*.018;
+
+    p.vx*=.9;
+    p.vy*=.9;
+
+    /* explosion from mouse */
+
+    const mx=p.x-mouse.x;
+    const my=p.y-mouse.y;
+
+    const md=Math.sqrt(mx*mx+my*my)+1;
+
+    if(innerWidth>800 && md<160){
+
+      p.vx+=mx/md*1.5;
+      p.vy+=my/md*1.5;
+    }
+
+    p.x+=p.vx;
+    p.y+=p.vy;
+
+    if(visible){
+
+      tctx.beginPath();
+
+      tctx.arc(
+        p.x,
+        p.y,
+        p.size,
+        0,
+        Math.PI*2
+      );
+
+      tctx.fillStyle=
+        `rgba(255,255,255,.8)`;
+
+      tctx.fill();
+    }
+
+  }
+
+  requestAnimationFrame(drawTextParticles);
+}
+
+drawTextParticles();
+
+
+/* =====================================================
+   CYBER NETWORK
+===================================================== */
+
+const nc=document.getElementById("network");
+const nctx=setupCanvas(nc);
+
+const nodes=[];
+
+for(let i=0;i<90;i++){
+
+  nodes.push({
+
+    x:Math.random()*W,
+    y:Math.random()*H,
+
+    vx:(Math.random()-.5)*.4,
+    vy:(Math.random()-.5)*.4,
+
+    r:Math.random()*2+1,
+
+    pulse:Math.random()*Math.PI*2
+
+  });
+
+}
+
+
+function drawNetwork(){
+
+  nctx.clearRect(0,0,W,H);
+
+  for(const n of nodes){
+
+    n.x+=n.vx;
+    n.y+=n.vy;
+
+    n.pulse+=.025;
+
+    if(n.x<0||n.x>W) n.vx*=-1;
+    if(n.y<0||n.y>H) n.vy*=-1;
+
+  }
+
+  for(let i=0;i<nodes.length;i++){
+
+    const a=nodes[i];
+
+    for(let j=i+1;j<nodes.length;j++){
+
+      const b=nodes[j];
+
+      const dx=a.x-b.x;
+      const dy=a.y-b.y;
+
+      const d=Math.sqrt(dx*dx+dy*dy);
+
+      if(d<150){
+
+        nctx.beginPath();
+        nctx.moveTo(a.x,a.y);
+        nctx.lineTo(b.x,b.y);
+
+        nctx.strokeStyle=
+          `rgba(255,255,255,${(1-d/150)*.15})`;
+
+        nctx.lineWidth=.5;
+        nctx.stroke();
+
+      }
+
+    }
+
+  }
+
+  for(const n of nodes){
+
+    const glow=
+      1+Math.sin(n.pulse)*.5;
+
+    nctx.beginPath();
+
+    nctx.arc(
+      n.x,
+      n.y,
+      n.r*glow,
+      0,
+      Math.PI*2
+    );
+
+    nctx.fillStyle=
+      "rgba(255,255,255,.65)";
+
+    nctx.fill();
+
+  }
+
+  requestAnimationFrame(drawNetwork);
+}
+
+drawNetwork();
+
+
+/* =====================================================
+   SCROLL-BASED PARTICLE WARP
+===================================================== */
+
+let previousScroll=0;
+
+window.addEventListener("scroll",()=>{
+
+  const velocity=
+    Math.abs(scrollY-previousScroll);
+
+  if(velocity>18){
+
+    for(let i=0;i<particles.length;i+=12){
+
+      const p=particles[i];
+
+      const a=Math.random()*Math.PI*2;
+
+      const force=
+        Math.min(velocity*.08,3);
+
+      p.vx+=Math.cos(a)*force;
+      p.vy+=Math.sin(a)*force;
+
+      p.burst=Math.min(1,p.burst+.25);
+
+    }
+
+  }
+
+  previousScroll=scrollY;
+
+});
+
+
+/* =====================================================
+   INITIAL INTRO BURST
+===================================================== */
+
+setTimeout(()=>{
+
+  for(const p of particles){
+
+    const dx=p.x-W/2;
+    const dy=p.y-H/2;
+
+    const d=Math.sqrt(dx*dx+dy*dy)+1;
+
+    p.vx+=dx/d*(Math.random()*3);
+    p.vy+=dy/d*(Math.random()*3);
+
+    p.burst=1;
+  }
+
+},500);
+
+
+/* =====================================================
+   PAGE LOAD
+===================================================== */
+
+window.addEventListener("load",()=>{
+
+  document.querySelectorAll(".hero .reveal")
+    .forEach((el,i)=>{
+
+      setTimeout(()=>{
+        el.classList.add("active");
+      },200+i*250);
+
+    });
+
+});
+
+</script>
+
+</body>
+</html>
